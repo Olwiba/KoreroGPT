@@ -3,6 +3,7 @@ Talk with robots.
 
 ## Requirements
 - Python 3.6 or higher
+- https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
 ## How to use
 1. Clone the repository `git clone https://`

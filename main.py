@@ -38,7 +38,7 @@ def text_to_speech(text, output_file):
     )
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3,
-        speaking_rate=1.5,
+        speaking_rate=1.3,
     )
 
     response = client.synthesize_speech(
@@ -59,6 +59,10 @@ def get_chatgpt_response(prompt):
     )
 
     return response.choices[0].text.strip()
+
+def play_audio_file(file_path):
+    sound = AudioSegment.from_mp3(file_path)
+    play(sound)
 
 
 # Capture the user's speech input.
@@ -122,15 +126,13 @@ def interactive_conversation():
             text_to_speech(chatgpt_response, output_file)
 
             # Play the response
-            audio = AudioSegment.from_file(output_file)
-            play(audio)
+            play_audio_file(output_file)
 
             # Cleanup output audio file
             remove_file(output_file)
 
         except sr.UnknownValueError:
-            # TODO - this should say something..
-            print("Could not understand audio")
+            play_audio_file("./pleaseRepeat.mp3")
         except sr.RequestError as e:
             print(f"Error: {e}")
 

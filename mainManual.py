@@ -53,7 +53,8 @@ def text_to_speech(text, output_file):
         ssml_gender=texttospeech.SsmlVoiceGender.FEMALE,
     )
     audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3
+        audio_encoding=texttospeech.AudioEncoding.MP3,
+        speaking_rate=1.3,
     )
 
     response = client.synthesize_speech(

@@ -1,10 +1,11 @@
 import os
 import openai
 import pyaudio
-import pygame
-import wave
-from google.cloud import speech_v1p1beta1 as speech
+
+from pydub import AudioSegment
+from pydub.playback import play
 from google.cloud import texttospeech
+import speech_recognition as sr
 
 # Read API key from file.
 def read_api_key(file_path):
@@ -28,30 +29,16 @@ def play_mp3(file_path):
     while pygame.mixer.music.get_busy():
         pygame.time.Clock().tick(10)
 
-def transcribe_audio_file(file_path):
-    client = speech.SpeechClient()
-    with open(file_path, "rb") as audio_file:
-        content = audio_file.read()
-
-    audio = speech.RecognitionAudio(content=content)
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=16000,
-        language_code="en-US",
-    )
-
-    response = client.recognize(config=config, audio=audio)
-    return response.results[0].alternatives[0].transcript
-
 def text_to_speech(text, output_file):
     client = texttospeech.TextToSpeechClient()
     input_text = texttospeech.SynthesisInput(text=text)
     voice = texttospeech.VoiceSelectionParams(
-        language_code="en-US",
+        language_code="en-NZ",
         ssml_gender=texttospeech.SsmlVoiceGender.FEMALE,
     )
     audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3
+        audio_encoding=texttospeech.AudioEncoding.MP3,
+        speaking_rate=1.5,
     )
 
     response = client.synthesize_speech(
@@ -63,7 +50,7 @@ def text_to_speech(text, output_file):
 
 def get_chatgpt_response(prompt):
     response = openai.Completion.create(
-        engine="text-davinci-002",
+        engine="text-davinci-003",
         prompt=prompt,
         max_tokens=50,
         n=1,
@@ -72,40 +59,6 @@ def get_chatgpt_response(prompt):
     )
 
     return response.choices[0].text.strip()
-
-def record_audio(file_path, seconds=3):
-    CHUNK = 1024
-    FORMAT = pyaudio.paInt16
-    CHANNELS = 1
-    RATE = 16000
-
-    p = pyaudio.PyAudio()
-
-    stream = p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
-                    input=True,
-                    frames_per_buffer=CHUNK)
-
-    print("Recording...")
-
-    frames = []
-
-    for _ in range(0, int(RATE / CHUNK * seconds)):
-        data = stream.read(CHUNK)
-        frames.append(data)
-
-    print("Finished recording.")
-
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-
-    with wave.open(file_path, 'wb') as wf:
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(p.get_sample_size(FORMAT))
-        wf.setframerate(RATE)
-        wf.writeframes(b''.join(frames))
 
 
 # Capture the user's speech input.
@@ -116,38 +69,70 @@ def record_audio(file_path, seconds=3):
 # Repeat steps 1-5 for an interactive conversation.
 
 def interactive_conversation():
-    print("Welcome to KoreroGPT!")
-    print("---------------------")
-    print("Press Ctrl+C to exit.")
+    print("⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀")
+    print("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀")
+    print("⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀")
+    print("⠀⠀⠀⠀⢀⣴⣾⣿⠿⠟⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠻⠿⣿⣷⣦⡀⠀⠀⠀⠀")
+    print("⠀⠀⢀⣾⣿⠟⠉⠀⠀⠀⣠⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣄⠀⠀⠀⠈⠻⣿⣷⡀⠀⠀")
+    print("⠀⣰⣿⡟⠁⠀⠀⠀⢀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣾⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⣠⣾⣿⣿⣝⣯⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⡀⠀⠀⠀⠈⢻⣿⣆⠀")
+    print("⢰⣿⡏⠀⠀⠀⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡆⠀⠀⢸⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⠀⠀⠀⠀⠀⢹⣿⡆")
+    print("⣾⣿⠀⠀⠀⠀⠀⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⣿⣷")
+    print("⣿⣿⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠉⠉⠉⠉⣿⣿⣿⣿⣿⣿⣿⠀⠀⣿⣿⣿⣿⣿⣿⣿⠉⠉⠉⠉⢹⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⣿⣿")
+    print("⢻⣿⡀⠀⠀⠀⠀⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⠀⠀⢿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⠀⠀⠀⠀⢀⣿⡿")
+    print("⠘⣿⣧⠀⠀⠀⠀⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⣧⣤⣤⣤⣤⣿⣿⣿⣿⣿⣿⠃⠀⠀⠘⣿⣿⣿⣿⣿⣿⣤⣤⣤⣤⣼⣿⣿⣿⣿⣿⣿⣿⣿⡟⠀⠀⠀⠀⠀⣼⣿⠃")
+    print("⠀⠘⢿⣷⡀⠀⠀⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀⠀⠀⠀⠘⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠀⠀⠀⠀⢀⣾⡿⠃⠀")
+    print("⠀⠀⠈⠻⣿⣶⣄⡀⠀⠀⠈⠻⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠙⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠟⠁⠀⠀⢀⣠⣶⣿⠟⠁⠀⠀")
+    print("⠀⠀⠀⠀⠀⠙⠻⢿⣿⣶⣶⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣶⣶⣿⡿⠟⠋⠁⠀⠀⠀⠀")
+    print("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀")
+    print("⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣶⣶⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣴⣶⣶⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀")
+    print("⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀")
+    print("                 ╔═════════════════════════╗")
+    print("                 ║  Welcome to KoreroGPT!  ║")
+    print("                 ╠═════════════════════════╣")
+    print("                 ║ * Press Ctrl+C to exit. ║")
+    print("                 ║                         ║")
+    print("                 ║      Made with <3       ║")
+    print("                 ╚═════════════════════════╝")
+    print("")
+
+    # Create a recognizer instance
+    r = sr.Recognizer()
+    
     while True:
-        print("Press Enter to Korero...")
-        input("")
-        
-        # 1. Capture the user's speech input
-        input_file = "./input.wav"
-        record_audio(input_file)
+        print("Speak to Korero...")
 
-        # 2. Convert the speech input into text using the STT library
-        user_text = transcribe_audio_file(input_file)
-        print("User: ", user_text)
+        # Set the microphone as the audio source
+        with sr.Microphone() as source:
+            r.adjust_for_ambient_noise(source) # Adjust for ambient noise levels
+            audio = r.listen(source) # Listen for audio input
 
-        # Cleanup input audio file
-        # remove_file(input_file)
+        try:
+            print("Processing audio...")
+            # Transcribe the audio to text
+            user_text = r.recognize_google(audio)
+            print("User: ", user_text)
 
-        # 3. Send the text input to ChatGPT and get a response
-        prompt = "User: " + user_text + "\nAssistant:"
-        chatgpt_response = get_chatgpt_response(prompt)
-        print("KoreroGPT: ", chatgpt_response)
+            # Send the text input to ChatGPT and get a response
+            prompt = "User: " + user_text + "\nKoreroGPT:"
+            chatgpt_response = get_chatgpt_response(prompt)
+            print("KoreroGPT: ", chatgpt_response)
 
-        # 4. Convert the ChatGPT response into speech using the TTS library
-        output_file = "./output.mp3"
-        text_to_speech(chatgpt_response, output_file)
+            # Convert the ChatGPT response into speech using the TTS library
+            output_file = "./output.mp3"
+            text_to_speech(chatgpt_response, output_file)
 
-        # Play the response using a media player, e.g., VLC or mpg123
-        play_mp3(output_file)
+            # Play the response
+            audio = AudioSegment.from_file(output_file)
+            play(audio)
 
-        # Cleanup output audio file
-        # remove_file(output_file)
+            # Cleanup output audio file
+            remove_file(output_file)
+
+        except sr.UnknownValueError:
+            # TODO - this should say something..
+            print("Could not understand audio")
+        except sr.RequestError as e:
+            print(f"Error: {e}")
 
 if __name__ == "__main__":
     interactive_conversation()

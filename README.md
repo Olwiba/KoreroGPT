@@ -4,6 +4,8 @@
 
 This system provides our AI models with a voice interface to make human interaction more accessable.
 
+![image](https://user-images.githubusercontent.com/14970658/236709035-7dd4a5af-43f0-439d-97f2-aeeacc2f4937.png)
+
 ### Features 🎉
 - Integrated with chatGPT
 - Integrated with voice recognition model

@@ -66,7 +66,7 @@ def text_to_speech(text, output_file):
 
 def get_chatgpt_response(prompt):
     response = openai.Completion.create(
-        engine="text-davinci-003",
+        model="gpt-3.5-turbo",
         prompt=prompt,
         max_tokens=50,
         n=1,
@@ -109,14 +109,6 @@ def record_audio(file_path, seconds=3):
         wf.setsampwidth(p.get_sample_size(FORMAT))
         wf.setframerate(RATE)
         wf.writeframes(b''.join(frames))
-
-
-# Capture the user's speech input.
-# Convert the speech input into text using the STT library.
-# Send the text input to ChatGPT and get a response.
-# Convert the ChatGPT response into speech using the TTS library.
-# Animate the avatar while playing the generated speech.
-# Repeat steps 1-5 for an interactive conversation.
 
 def interactive_conversation():
     print("⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀")

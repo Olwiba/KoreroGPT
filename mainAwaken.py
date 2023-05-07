@@ -83,35 +83,47 @@ def interactive_conversation():
 
     # Create a recognizer instance
     r = sr.Recognizer()
+
+    print("Say \"hey korero\" to awaken...")
     
     while True:
-        print("Speak to Korero...")
-
         # Set the microphone as the audio source
         with sr.Microphone() as source:
             r.adjust_for_ambient_noise(source) # Adjust for ambient noise levels
             audio = r.listen(source) # Listen for audio input
 
         try:
-            print("Processing audio...")
+            print("Processing wake-up phrase...")
             # Transcribe the audio to text
-            user_text = r.recognize_google(audio)
-            print("User: ", user_text)
+            wake_up_phrase = r.recognize_google(audio)
+            print("Wake-up phrase: ", wake_up_phrase)
 
-            # Send the text input to ChatGPT and get a response
-            prompt = "User: " + user_text + "\nKoreroGPT:"
-            chatgpt_response = get_chatgpt_response(prompt)
-            print("KoreroGPT: ", chatgpt_response)
+            # Check if the wake-up phrase is "hey korero"
+            if wake_up_phrase.strip().lower() == "hey korero":
 
-            # Convert the ChatGPT response into speech using the TTS library
-            output_file = "./output.mp3"
-            text_to_speech(chatgpt_response, output_file)
+                with sr.Microphone() as source:
+                    r.adjust_for_ambient_noise(source) # Adjust for ambient noise levels
+                    audio = r.listen(source) # Listen for audio input
 
-            # Play the response
-            play_audio_file(output_file)
+                    print("Processing audio...")
+                    # Transcribe the audio to text
+                    user_text = r.recognize_google(audio)
+                    print("User: ", user_text)
 
-            # Cleanup output audio file
-            remove_file(output_file)
+                    # Send the text input to ChatGPT and get a response
+                    prompt = "User: " + user_text + "\nKoreroGPT:"
+                    chatgpt_response = get_chatgpt_response(prompt)
+                    print("KoreroGPT: ", chatgpt_response)
+
+                    # Convert the ChatGPT response into speech using the TTS library
+                    output_file = "./output.mp3"
+                    text_to_speech(chatgpt_response, output_file)
+
+                    # Play the response
+                    play_audio_file(output_file)
+
+                    # Cleanup output audio file
+                    remove_file(output_file)
 
         except sr.UnknownValueError:
             play_audio_file("./pleaseRepeat.mp3")

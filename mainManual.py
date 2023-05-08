@@ -66,7 +66,7 @@ def text_to_speech(text, output_file):
 
 def get_chatgpt_response(prompt):
     response = openai.Completion.create(
-        model="gpt-3.5-turbo",
+        model="text-davinci-003",
         prompt=prompt,
         max_tokens=50,
         n=1,

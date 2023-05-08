@@ -40,7 +40,7 @@ def text_to_speech(text, output_file):
 
 def get_chatgpt_response(prompt):
     response = openai.Completion.create(
-        model="gpt-3.5-turbo",
+        model="text-davinci-003",
         prompt=prompt,
         max_tokens=50,
         n=1,
@@ -84,7 +84,7 @@ def interactive_conversation():
     # Create a recognizer instance
     r = sr.Recognizer()
 
-    print("Say \"hey korero\" to awaken...")
+    print("Say \"hey kiwi\" to awaken...")
     
     while True:
         # Set the microphone as the audio source
@@ -98,8 +98,8 @@ def interactive_conversation():
             wake_up_phrase = r.recognize_google(audio)
             print("Wake-up phrase: ", wake_up_phrase)
 
-            # Check if the wake-up phrase is "hey korero"
-            if wake_up_phrase.strip().lower() == "hey korero":
+            # Check if the wake-up phrase is "hey kiwi"
+            if wake_up_phrase.strip().lower() == "hey kiwi":
 
                 with sr.Microphone() as source:
                     r.adjust_for_ambient_noise(source) # Adjust for ambient noise levels
